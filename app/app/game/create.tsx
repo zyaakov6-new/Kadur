@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -21,7 +22,6 @@ import {
   Globe,
   Lock,
 } from 'lucide-react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { format, addDays } from 'date-fns';
 import { he } from 'date-fns/locale';
 import { useThemeStore, useGamesStore, useAuthStore } from '@/store';
@@ -29,6 +29,13 @@ import { useAnalytics } from '@/hooks/useAnalytics';
 import { Button, Input, Card } from '@/components/ui';
 import { GAME_FORMATS, GameFormat } from '@/types/database';
 import { Colors, FontSizes, Spacing, BorderRadius } from '@/constants';
+
+// Time options for simple selection
+const TIME_OPTIONS = [
+  '07:00', '08:00', '09:00', '10:00', '11:00', '12:00',
+  '13:00', '14:00', '15:00', '16:00', '17:00', '18:00',
+  '19:00', '20:00', '21:00', '22:00',
+];
 
 export default function CreateGameScreen() {
   const router = useRouter();
@@ -39,16 +46,15 @@ export default function CreateGameScreen() {
 
   // Form state
   const [title, setTitle] = useState('');
-  const [date, setDate] = useState(new Date());
-  const [time, setTime] = useState(new Date());
-  const [format, setFormat] = useState<GameFormat>('7x7');
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedTime, setSelectedTime] = useState('18:00');
+  const [gameFormat, setGameFormat] = useState<GameFormat>('7x7');
   const [locationText, setLocationText] = useState('');
   const [maxPlayers, setMaxPlayers] = useState('14');
   const [notes, setNotes] = useState('');
   const [isPublic, setIsPublic] = useState(true);
 
   // UI state
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -86,17 +92,16 @@ export default function CreateGameScreen() {
       const game = await createGame({
         organizer_id: profile.id,
         title: title.trim(),
-        game_date: format(date, 'yyyy-MM-dd'),
-        start_time: format(time, 'HH:mm:ss'),
-        format,
+        game_date: format(selectedDate, 'yyyy-MM-dd'),
+        start_time: selectedTime + ':00',
+        format: gameFormat,
         location_text: locationText.trim(),
-        // TODO: Add geocoding for lat/lng
         max_players: parseInt(maxPlayers),
         notes: notes.trim() || null,
         is_public: isPublic,
       });
 
-      logGameCreated(game.id, format, locationText);
+      logGameCreated(game.id, gameFormat, locationText);
 
       Alert.alert('המשחק נוצר!', 'המשחק נוצר בהצלחה', [
         { text: 'מעולה', onPress: () => router.back() },
@@ -114,26 +119,24 @@ export default function CreateGameScreen() {
   }));
 
   const handleFormatChange = (newFormat: GameFormat) => {
-    setFormat(newFormat);
+    setGameFormat(newFormat);
     const option = formatOptions.find((f) => f.value === newFormat);
     if (option) {
       setMaxPlayers(option.maxDefault.toString());
     }
   };
 
-  // Quick date options
+  // Date options
   const dateOptions = [
     { label: 'היום', date: new Date() },
     { label: 'מחר', date: addDays(new Date(), 1) },
-    { label: 'שישי', date: getNextDayOfWeek(5) },
-    { label: 'שבת', date: getNextDayOfWeek(6) },
+    { label: 'מחרתיים', date: addDays(new Date(), 2) },
+    { label: '+3 ימים', date: addDays(new Date(), 3) },
+    { label: '+4 ימים', date: addDays(new Date(), 4) },
+    { label: '+5 ימים', date: addDays(new Date(), 5) },
+    { label: '+6 ימים', date: addDays(new Date(), 6) },
+    { label: 'שבוע', date: addDays(new Date(), 7) },
   ];
-
-  function getNextDayOfWeek(dayOfWeek: number): Date {
-    const today = new Date();
-    const daysUntil = (dayOfWeek - today.getDay() + 7) % 7 || 7;
-    return addDays(today, daysUntil);
-  }
 
   return (
     <SafeAreaView
@@ -180,11 +183,11 @@ export default function CreateGameScreen() {
                     styles.formatButton,
                     {
                       backgroundColor:
-                        format === option.value
+                        gameFormat === option.value
                           ? Colors.primary[500]
                           : theme.colors.card,
                       borderColor:
-                        format === option.value
+                        gameFormat === option.value
                           ? Colors.primary[500]
                           : theme.colors.border,
                     },
@@ -196,7 +199,7 @@ export default function CreateGameScreen() {
                       styles.formatText,
                       {
                         color:
-                          format === option.value ? '#FFFFFF' : theme.colors.text,
+                          gameFormat === option.value ? '#FFFFFF' : theme.colors.text,
                       },
                     ]}
                   >
@@ -219,25 +222,25 @@ export default function CreateGameScreen() {
                       styles.dateChip,
                       {
                         backgroundColor:
-                          format(date, 'yyyy-MM-dd') ===
+                          format(selectedDate, 'yyyy-MM-dd') ===
                           format(option.date, 'yyyy-MM-dd')
                             ? Colors.primary[500]
                             : theme.colors.card,
                         borderColor:
-                          format(date, 'yyyy-MM-dd') ===
+                          format(selectedDate, 'yyyy-MM-dd') ===
                           format(option.date, 'yyyy-MM-dd')
                             ? Colors.primary[500]
                             : theme.colors.border,
                       },
                     ]}
-                    onPress={() => setDate(option.date)}
+                    onPress={() => setSelectedDate(option.date)}
                   >
                     <Text
                       style={[
                         styles.dateChipText,
                         {
                           color:
-                            format(date, 'yyyy-MM-dd') ===
+                            format(selectedDate, 'yyyy-MM-dd') ===
                             format(option.date, 'yyyy-MM-dd')
                               ? '#FFFFFF'
                               : theme.colors.text,
@@ -248,42 +251,12 @@ export default function CreateGameScreen() {
                     </Text>
                   </TouchableOpacity>
                 ))}
-                <TouchableOpacity
-                  style={[
-                    styles.dateChip,
-                    {
-                      backgroundColor: theme.colors.card,
-                      borderColor: theme.colors.border,
-                    },
-                  ]}
-                  onPress={() => setShowDatePicker(true)}
-                >
-                  <Calendar size={16} color={theme.colors.text} />
-                  <Text
-                    style={[styles.dateChipText, { color: theme.colors.text }]}
-                  >
-                    בחר תאריך
-                  </Text>
-                </TouchableOpacity>
               </View>
             </ScrollView>
             <Text style={[styles.selectedDate, { color: theme.colors.muted }]}>
-              {format(date, 'EEEE, d בMMMM yyyy', { locale: he })}
+              {format(selectedDate, 'EEEE, d בMMMM yyyy', { locale: he })}
             </Text>
           </View>
-
-          {showDatePicker && (
-            <DateTimePicker
-              value={date}
-              mode="date"
-              minimumDate={new Date()}
-              maximumDate={addDays(new Date(), 30)}
-              onChange={(event, selectedDate) => {
-                setShowDatePicker(false);
-                if (selectedDate) setDate(selectedDate);
-              }}
-            />
-          )}
 
           {/* Time */}
           <View style={styles.section}>
@@ -300,22 +273,10 @@ export default function CreateGameScreen() {
             >
               <Clock size={20} color={Colors.primary[500]} />
               <Text style={[styles.timeText, { color: theme.colors.text }]}>
-                {format(time, 'HH:mm')}
+                {selectedTime}
               </Text>
             </TouchableOpacity>
           </View>
-
-          {showTimePicker && (
-            <DateTimePicker
-              value={time}
-              mode="time"
-              is24Hour={true}
-              onChange={(event, selectedTime) => {
-                setShowTimePicker(false);
-                if (selectedTime) setTime(selectedTime);
-              }}
-            />
-          )}
 
           {/* Location */}
           <Input
@@ -431,6 +392,65 @@ export default function CreateGameScreen() {
           />
         </View>
       </KeyboardAvoidingView>
+
+      {/* Time Picker Modal */}
+      <Modal
+        visible={showTimePicker}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowTimePicker(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: theme.colors.card }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
+                בחר שעה
+              </Text>
+              <TouchableOpacity onPress={() => setShowTimePicker(false)}>
+                <X size={24} color={theme.colors.text} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.timeList}>
+              <View style={styles.timeGrid}>
+                {TIME_OPTIONS.map((time) => (
+                  <TouchableOpacity
+                    key={time}
+                    style={[
+                      styles.timeOption,
+                      {
+                        backgroundColor:
+                          selectedTime === time
+                            ? Colors.primary[500]
+                            : theme.colors.background,
+                        borderColor:
+                          selectedTime === time
+                            ? Colors.primary[500]
+                            : theme.colors.border,
+                      },
+                    ]}
+                    onPress={() => {
+                      setSelectedTime(time);
+                      setShowTimePicker(false);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.timeOptionText,
+                        {
+                          color:
+                            selectedTime === time ? '#FFFFFF' : theme.colors.text,
+                        },
+                      ]}
+                    >
+                      {time}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -540,5 +560,46 @@ const styles = StyleSheet.create({
   footer: {
     padding: Spacing.lg,
     borderTopWidth: 1,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    borderTopLeftRadius: BorderRadius.xl,
+    borderTopRightRadius: BorderRadius.xl,
+    maxHeight: '60%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.1)',
+  },
+  modalTitle: {
+    fontSize: FontSizes.lg,
+    fontWeight: '600',
+  },
+  timeList: {
+    padding: Spacing.lg,
+  },
+  timeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+  },
+  timeOption: {
+    width: '23%',
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  timeOptionText: {
+    fontSize: FontSizes.base,
+    fontWeight: '500',
   },
 });
