@@ -86,8 +86,8 @@ export default function CreateGameScreen() {
       const game = await createGame({
         organizer_id: profile.id,
         title: title.trim(),
-        date: format(date, 'yyyy-MM-dd'),
-        time: format(time, 'HH:mm:ss'),
+        game_date: format(date, 'yyyy-MM-dd'),
+        start_time: format(time, 'HH:mm:ss'),
         format,
         location_text: locationText.trim(),
         // TODO: Add geocoding for lat/lng

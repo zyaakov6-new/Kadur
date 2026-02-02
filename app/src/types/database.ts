@@ -57,8 +57,8 @@ export interface Database {
           id: string;
           organizer_id: string;
           title: string;
-          date: string;
-          time: string;
+          game_date: string;
+          start_time: string;
           format: string;
           location_text: string;
           location_lat: number | null;
@@ -75,8 +75,8 @@ export interface Database {
           id?: string;
           organizer_id: string;
           title: string;
-          date: string;
-          time: string;
+          game_date: string;
+          start_time: string;
           format?: string;
           location_text: string;
           location_lat?: number | null;
@@ -93,8 +93,8 @@ export interface Database {
           id?: string;
           organizer_id?: string;
           title?: string;
-          date?: string;
-          time?: string;
+          game_date?: string;
+          start_time?: string;
           format?: string;
           location_text?: string;
           location_lat?: number | null;

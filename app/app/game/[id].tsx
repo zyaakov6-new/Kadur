@@ -264,13 +264,13 @@ export default function GameDetailsScreen() {
           <View style={styles.detailRow}>
             <Calendar size={20} color={Colors.primary[500]} />
             <Text style={[styles.detailText, { color: theme.colors.text }]}>
-              {formatDate(currentGame.date)}
+              {formatDate(currentGame.game_date)}
             </Text>
           </View>
           <View style={styles.detailRow}>
             <Clock size={20} color={Colors.primary[500]} />
             <Text style={[styles.detailText, { color: theme.colors.text }]}>
-              {formatTime(currentGame.time)}
+              {formatTime(currentGame.start_time)}
             </Text>
           </View>
           <TouchableOpacity style={styles.detailRow} onPress={handleOpenMaps}>

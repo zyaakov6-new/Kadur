@@ -75,13 +75,13 @@ export function GameCard({ game, onPress, showDistance = true }: GameCardProps) 
             <View style={styles.infoItem}>
               <Calendar size={16} color={Colors.primary[500]} />
               <Text style={[styles.infoText, { color: theme.colors.text }]}>
-                {formatDate(game.date)}
+                {formatDate(game.game_date)}
               </Text>
             </View>
             <View style={styles.infoItem}>
               <Clock size={16} color={Colors.primary[500]} />
               <Text style={[styles.infoText, { color: theme.colors.text }]}>
-                {formatTime(game.time)}
+                {formatTime(game.start_time)}
               </Text>
             </View>
           </View>

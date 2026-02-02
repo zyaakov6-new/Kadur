@@ -29,8 +29,8 @@ CREATE TABLE games (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   organizer_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
-  date DATE NOT NULL,
-  time TIME NOT NULL,
+  game_date DATE NOT NULL,
+  start_time TIME NOT NULL,
   format TEXT NOT NULL DEFAULT '7x7', -- 5x5, 7x7, 11x11
   location_text TEXT NOT NULL,
   location_lat DOUBLE PRECISION,
@@ -88,7 +88,7 @@ CREATE TABLE notifications (
 -- INDEXES
 -- ============================================
 
-CREATE INDEX idx_games_date ON games(date);
+CREATE INDEX idx_games_date ON games(game_date);
 CREATE INDEX idx_games_status ON games(status);
 CREATE INDEX idx_games_organizer ON games(organizer_id);
 CREATE INDEX idx_games_location ON games(location_lat, location_lng);
@@ -187,8 +187,8 @@ RETURNS TABLE (
   id UUID,
   organizer_id UUID,
   title TEXT,
-  date DATE,
-  time TIME,
+  game_date DATE,
+  start_time TIME,
   format TEXT,
   location_text TEXT,
   location_lat DOUBLE PRECISION,
@@ -209,8 +209,8 @@ BEGIN
     g.id,
     g.organizer_id,
     g.title,
-    g.date,
-    g.time,
+    g.game_date,
+    g.start_time,
     g.format,
     g.location_text,
     g.location_lat,
@@ -228,13 +228,13 @@ BEGIN
   JOIN users u ON g.organizer_id = u.id
   WHERE
     g.status IN ('open', 'full')
-    AND g.date >= CURRENT_DATE
+    AND g.game_date >= CURRENT_DATE
     AND (g.location_lat IS NULL OR calculate_distance(user_lat, user_lng, g.location_lat, g.location_lng) <= radius_km)
     AND (filter_city IS NULL OR g.location_text ILIKE '%' || filter_city || '%')
     AND (filter_format IS NULL OR g.format = filter_format)
-    AND (filter_date IS NULL OR g.date = filter_date)
+    AND (filter_date IS NULL OR g.game_date = filter_date)
     AND (filter_public_only = FALSE OR g.is_public = TRUE)
-  ORDER BY g.date ASC, g.time ASC;
+  ORDER BY g.game_date ASC, g.start_time ASC;
 END;
 $$ LANGUAGE plpgsql;
 

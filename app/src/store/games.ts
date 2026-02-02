@@ -107,9 +107,9 @@ export const useGamesStore = create<GamesState>((set, get) => ({
           `
           )
           .in('status', ['open', 'full'])
-          .gte('date', new Date().toISOString().split('T')[0])
-          .order('date', { ascending: true })
-          .order('time', { ascending: true });
+          .gte('game_date', new Date().toISOString().split('T')[0])
+          .order('game_date', { ascending: true })
+          .order('start_time', { ascending: true });
 
         if (filters.city) {
           query = query.ilike('location_text', `%${filters.city}%`);
@@ -118,7 +118,7 @@ export const useGamesStore = create<GamesState>((set, get) => ({
           query = query.eq('format', filters.format);
         }
         if (filters.date) {
-          query = query.eq('date', filters.date);
+          query = query.eq('game_date', filters.date);
         }
         if (filters.publicOnly) {
           query = query.eq('is_public', true);
@@ -165,7 +165,7 @@ export const useGamesStore = create<GamesState>((set, get) => ({
         `
         )
         .eq('organizer_id', userId)
-        .order('date', { ascending: true });
+        .order('game_date', { ascending: true });
 
       if (organizedError) throw organizedError;
 
