@@ -22,7 +22,8 @@ import {
   Sun,
   Smartphone,
 } from 'lucide-react-native';
-import * as ImagePicker from 'expo-image-picker';
+// ImagePicker disabled for Expo Go compatibility
+// import * as ImagePicker from 'expo-image-picker';
 import { useThemeStore, useAuthStore } from '@/store';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { Avatar, Button, Input, Card } from '@/components/ui';
@@ -103,18 +104,9 @@ export default function ProfileScreen() {
     ]);
   };
 
+  // Image picker disabled for Expo Go compatibility
   const handlePickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      // TODO: Upload to Supabase Storage
-      console.log('Selected image:', result.assets[0].uri);
-    }
+    Alert.alert('לא זמין', 'בחירת תמונה לא זמינה בגרסת הבדיקה');
   };
 
   // Not logged in state

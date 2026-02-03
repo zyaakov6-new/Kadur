@@ -12,7 +12,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { X, Mail, Lock, Chrome } from 'lucide-react-native';
-import * as AppleAuthentication from 'expo-apple-authentication';
+// Apple auth disabled for Expo Go compatibility
+// import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
 import { useThemeStore, useAuthStore } from '@/store';
 import { supabase } from '@/lib/supabase';
@@ -32,7 +33,6 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [isAppleLoading, setIsAppleLoading] = useState(false);
 
   const handleEmailLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -94,35 +94,9 @@ export default function LoginScreen() {
     }
   };
 
+  // Apple login disabled for Expo Go compatibility
   const handleAppleLogin = async () => {
-    try {
-      setIsAppleLoading(true);
-      const credential = await AppleAuthentication.signInAsync({
-        requestedScopes: [
-          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-          AppleAuthentication.AppleAuthenticationScope.EMAIL,
-        ],
-      });
-
-      if (credential.identityToken) {
-        const { error } = await supabase.auth.signInWithIdToken({
-          provider: 'apple',
-          token: credential.identityToken,
-        });
-
-        if (error) throw error;
-
-        logEvent('login', { method: 'apple' });
-        await initialize();
-        router.replace('/(tabs)');
-      }
-    } catch (error: any) {
-      if (error.code !== 'ERR_CANCELED') {
-        Alert.alert('שגיאה', error.message || 'לא הצלחנו להתחבר עם Apple');
-      }
-    } finally {
-      setIsAppleLoading(false);
-    }
+    Alert.alert('לא זמין', 'התחברות עם Apple לא זמינה בגרסת הבדיקה');
   };
 
   return (
@@ -161,19 +135,7 @@ export default function LoginScreen() {
 
           {/* Social login */}
           <View style={styles.socialSection}>
-            {Platform.OS === 'ios' && (
-              <AppleAuthentication.AppleAuthenticationButton
-                buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-                buttonStyle={
-                  theme.mode === 'dark'
-                    ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
-                    : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
-                }
-                cornerRadius={BorderRadius.button}
-                style={styles.appleButton}
-                onPress={handleAppleLogin}
-              />
-            )}
+            {/* Apple Sign-In disabled for Expo Go compatibility */}
 
             <Button
               title="התחבר עם Google"
